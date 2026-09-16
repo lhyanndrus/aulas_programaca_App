@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Caça ao Alvo</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            font-family: Arial, sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f172a,
+                    #1e293b
+                );
+
+            color: white;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+        }
+
+
+        .container {
+
+            width: 900px;
+
+            max-width: 95%;
+
+            text-align: center;
+
+        }
+
+
+        h1 {
+
+            font-size: 42px;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .subtitulo {
+
+            color: #94a3b8;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .placar {
+
+            display: flex;
+
+            justify-content: center;
+
+            gap: 20px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .card {
+
+            background: #1e293b;
+
+            padding: 15px 30px;
+
+            border-radius: 12px;
+
+            min-width: 140px;
+
+            box-shadow:
+                0 5px 20px rgba(0, 0, 0, 0.3);
+
+        }
+
+
+        .card span {
+
+            display: block;
+
+            font-size: 28px;
+
+            font-weight: bold;
+
+            margin-top: 5px;
+
+        }
+
+
+        #areaJogo {
+
+            position: relative;
+
+            width: 100%;
+
+            height: 500px;
+
+            background: #020617;
+
+            border: 3px solid #334155;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            cursor: crosshair;
+
+        }
+
+
+        #alvo {
+
+            position: absolute;
+
+            width: 70px;
+
+            height: 70px;
+
+            background: #ef4444;
+
+            border-radius: 50%;
+
+            display: none;
+
+            justify-content: center;
+
+            align-items: center;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 0 20px rgba(239, 68, 68, 0.7);
+
+            border: 5px solid white;
+
+        }
+
+
+        #alvo::after {
+
+            content: "";
+
+            width: 20px;
+
+            height: 20px;
+
+            background: white;
+
+            border-radius: 50%;
+
+        }
+
+
+        button {
+
+            margin-top: 20px;
+
+            padding: 15px 35px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #22c55e;
+
+            color: white;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+
+        button:hover {
+
+            transform: scale(1.05);
+
+        }
+
+
+        #mensagem {
+
+            font-size: 20px;
+
+            margin-top: 15px;
+
+            min-height: 25px;
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="container">
+
+
+        <h1>🎯 Caça ao Alvo</h1>
+
+        <p class="subtitulo">
+            Clique no alvo o mais rápido possível!
+        </p>
+
+
+        <div class="placar">
+
+
+            <div class="card">
+
+                Pontos
+
+                <span id="pontos">
+                    0
+                </span>
+
+            </div>
+
+
+            <div class="card">
+
+                Tempo
+
+                <span id="tempo">
+                    30
+                </span>
+
+            </div>
+
+
+            <div class="card">
+
+                Recorde
+
+                <span id="recorde">
+                    0
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        <div id="areaJogo">
+
+            <div id="alvo"></div>
+
+        </div>
+
+
+        <button onclick="iniciarJogo()">
+            🎮 Começar Jogo
+        </button>
+
+
+        <div id="mensagem"></div>
+
+
+    </div>
+
+
+<script>
+
+
+// ========================================
+// VARIÁVEIS DO JOGO
+// ========================================
+
+let pontos = 0;
+
+let tempo = 30;
+
+let jogoAtivo = false;
+
+let tamanhoAlvo = 70;
+
+let intervaloTempo;
+
+
+// ========================================
+// PEGAR ELEMENTOS DA TELA
+// ========================================
+
+const alvo =
+    document.getElementById("alvo");
+
+const areaJogo =
+    document.getElementById("areaJogo");
+
+const pontosTexto =
+    document.getElementById("pontos");
+
+const tempoTexto =
+    document.getElementById("tempo");
+
+const recordeTexto =
+    document.getElementById("recorde");
+
+const mensagem =
+    document.getElementById("mensagem");
+
+
+// ========================================
+// RECORD
+// ========================================
+
+let recorde =
+    localStorage.getItem("recorde") || 0;
+
+recordeTexto.textContent = recorde;
+
+
+// ========================================
+// INICIAR JOGO
+// ========================================
+
+function iniciarJogo() {
+
+
+    pontos = 0;
+
+    tempo = 30;
+
+    tamanhoAlvo = 70;
+
+    jogoAtivo = true;
+
+
+    pontosTexto.textContent = pontos;
+
+    tempoTexto.textContent = tempo;
+
+
+    mensagem.textContent =
+        "Boa sorte! 🎯";
+
+
+    alvo.style.display = "flex";
+
+
+    mudarPosicao();
+
+
+    clearInterval(intervaloTempo);
+
+
+    intervaloTempo = setInterval(
+
+        function() {
+
+            tempo--;
+
+            tempoTexto.textContent =
+                tempo;
+
+
+            if (tempo <= 0) {
+
+                finalizarJogo();
+
+            }
+
+        },
+
+        1000
+
+    );
+
+}
+
+
+// ========================================
+// MUDAR POSIÇÃO DO ALVO
+// ========================================
+
+function mudarPosicao() {
+
+
+    const largura =
+        areaJogo.clientWidth;
+
+    const altura =
+        areaJogo.clientHeight;
+
+
+    const novaX =
+        Math.random()
+        * (largura - tamanhoAlvo);
+
+
+    const novaY =
+        Math.random()
+        * (altura - tamanhoAlvo);
+
+
+    alvo.style.left =
+        novaX + "px";
+
+
+    alvo.style.top =
+        novaY + "px";
+
+
+    alvo.style.width =
+        tamanhoAlvo + "px";
+
+
+    alvo.style.height =
+        tamanhoAlvo + "px";
+
+}
+
+
+// ========================================
+// CLICAR NO ALVO
+// ========================================
+
+alvo.addEventListener(
+
+    "click",
+
+    function() {
+
+
+        if (!jogoAtivo) {
+
+            return;
+
+        }
+
+
+        pontos++;
+
+
+        pontosTexto.textContent =
+            pontos;
+
+
+        // O alvo diminui
+
+        if (tamanhoAlvo > 30) {
+
+            tamanhoAlvo -= 2;
+
+        }
+
+
+        mudarPosicao();
+
+    }
+
+);
+
+
+// ========================================
+// FINALIZAR JOGO
+// ========================================
+
+function finalizarJogo() {
+
+
+    jogoAtivo = false;
+
+
+    clearInterval(intervaloTempo);
+
+
+    alvo.style.display = "none";
+
+
+    mensagem.textContent =
+        "🏁 Fim de jogo! Você fez "
+        + pontos
+        + " pontos!";
+
+
+    if (pontos > recorde) {
+
+
+        recorde = pontos;
+
+
+        localStorage.setItem(
+            "recorde",
+            recorde
+        );
+
+
+        recordeTexto.textContent =
+            recorde;
+
+
+        mensagem.textContent +=
+            " 🏆 NOVO RECORDE!";
+
+    }
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
